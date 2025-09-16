@@ -1,0 +1,188 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id           Int       @id @default(autoincrement())
+  ids          String?
+  username     String?
+  email        String?   @unique
+  password     String?
+  role         String?   // Admin, Teacher, Student, Guest
+  phone        String?
+  avatar       String?
+  age          String?
+  gender       String?
+  metadata     String?   // json data
+  is_active    Boolean   @default(true)
+  account_type Int?
+
+  created_at   DateTime? @default(now())
+  updated_at   DateTime? @updatedAt
+  delete_at    DateTime?
+  deleted_by   Int?
+  updated_by   Int?
+
+  // Relations
+  examResults  ExamResults[]
+  userAnswers  UserAnswers[]
+}
+
+model Exams {
+  id           Int       @id @default(autoincrement())
+  title        String?
+  description  String?
+  deadline     DateTime? // time
+  metadata     String?
+
+  created_at   DateTime? @default(now())
+  updated_at   DateTime? @updatedAt
+  delete_at    DateTime?
+  deleted_by   Int?
+  updated_by   Int?
+
+  // Relations
+  examQuestions Exams_Questions[]
+  examResults   ExamResults[]
+}
+
+model Questions {
+  id           Int       @id @default(autoincrement())
+  content      String?
+  metadata     String?
+
+  created_at   DateTime? @default(now())
+  updated_at   DateTime? @updatedAt
+  delete_at    DateTime?
+  deleted_by   Int?
+  updated_by   Int?
+
+  // Relations
+  images          Images[]
+  examQuestions   Exams_Questions[]
+  questionAnswers Questions_Answers[]
+  userAnswers     UserAnswers[]
+}
+
+model Answers {
+  id           Int       @id @default(autoincrement())
+  content      String?
+  metadata     String?
+
+  created_at   DateTime? @default(now())
+  updated_at   DateTime? @updatedAt
+  delete_at    DateTime?
+  deleted_by   Int?
+  updated_by   Int?
+
+  // Relations
+  questionAnswers Questions_Answers[]
+  userAnswers     UserAnswers[]
+}
+
+model Exams_Questions {
+  id         Int       @id @default(autoincrement())
+  questionId Int
+  examId     Int
+  metadata   String?
+  score      Float?
+
+  created_at DateTime? @default(now())
+  updated_at DateTime? @updatedAt
+  delete_at  DateTime?
+  deleted_by Int?
+  updated_by Int?
+
+  // Relations
+  question Questions @relation(fields: [questionId], references: [id])
+  exam     Exams     @relation(fields: [examId], references: [id])
+}
+
+model Questions_Answers {
+  id         Int       @id @default(autoincrement())
+  questionId Int
+  answerId   Int
+  metadata   String?
+  is_correct Boolean   @default(false)
+
+  created_at DateTime? @default(now())
+  updated_at DateTime? @updatedAt
+  delete_at  DateTime?
+  deleted_by Int?
+  updated_by Int?
+
+  // Relations
+  question Questions @relation(fields: [questionId], references: [id])
+  answer   Answers   @relation(fields: [answerId], references: [id])
+}
+
+model ExamResults {
+  id         Int       @id @default(autoincrement())
+  examId     Int
+  userId     Int
+  start_time DateTime?
+  end_time   DateTime?
+  score      Float?
+  metadata   String?
+
+  created_at DateTime? @default(now())
+  updated_at DateTime? @updatedAt
+  delete_at  DateTime?
+  deleted_by Int?
+  updated_by Int?
+
+  // Relations
+  user        Users       @relation(fields: [userId], references: [id])
+  exam        Exams       @relation(fields: [examId], references: [id])
+  userAnswers UserAnswers[]
+}
+
+model UserAnswers {
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  answerId      Int
+  examResultId  Int
+  questionId    Int
+  answerText    String?
+  metadata      String?
+
+  created_at    DateTime? @default(now())
+  updated_at    DateTime? @updatedAt
+  delete_at     DateTime?
+  deleted_by    Int?
+  updated_by    Int?
+
+  // Relations
+  user       Users       @relation(fields: [userId], references: [id])
+  answer     Answers     @relation(fields: [answerId], references: [id])
+  examResult ExamResults @relation(fields: [examResultId], references: [id])
+  question   Questions   @relation(fields: [questionId], references: [id])
+}
+
+model Images {
+  id           Int       @id @default(autoincrement())
+  url          String?
+  questionId   Int?
+  metadata     String?
+
+  created_at   DateTime? @default(now())
+  updated_at   DateTime? @updatedAt
+  delete_at    DateTime?
+  deleted_by   Int?
+  updated_by   Int?
+
+  // Relations
+  question Questions? @relation(fields: [questionId], references: [id])
+}
